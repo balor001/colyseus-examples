@@ -56,7 +56,7 @@
                 dom.style.left = player.x + "px";
                 dom.style.top = player.y + "px";
                 dom.style.background = colors[Math.floor(Math.random() * colors.length)];
-                dom.innerText = "Player " + sessionId;
+                dom.innerText = "Player " + sessionId + "\n" + " ID: " + player.playerId;
 
                 player.onChange = function (changes) {
                     dom.style.left = player.x + "px";

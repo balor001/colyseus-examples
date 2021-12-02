@@ -12,6 +12,17 @@ export class Player extends Schema {
     playerId = 0;
 }
 
+export class Ball extends Schema {
+    @type("number")
+    x = Math.floor(Math.random() * 400);
+
+    @type("number")
+    y = Math.floor(Math.random() * 400);
+
+    @type("number")
+    ballId = 0;
+}
+
 export class State extends Schema {
     @type({ map: Player })
     players = new MapSchema<Player>();
@@ -36,19 +47,52 @@ export class State extends Schema {
             this.players.get(sessionId).y += movement.y * 10;
         }
     }
+
+
+    // Ball
+    @type({ map: Ball })
+    balls = new MapSchema<Ball>();
+    ballCount = 0;
+
+    createBall(roomId: string) {
+        this.balls.set(roomId, new Ball());
+        this.ballCount++;
+        this.balls.get(roomId).ballId = this.ballCount;
+    }
+
+    removeBall(roomId: string) {
+        this.balls.delete(roomId);
+    }
+
+    moveBall (roomId: string, movement: any) {
+        if (movement.x) {
+            this.balls.get(roomId).x += movement.x * 10;
+
+        } else if (movement.y) {
+            this.balls.get(roomId).y += movement.y * 10;
+        }
+    }
 }
 
-export class StateHandlerRoom extends Room<State> {
-    maxClients = 4;
+export class Pong extends Room<State> {
+    maxClients = 2;
+
+    setSimulationInterval(){
+        
+    }
+
+    OnTwoPlayers(){
+
+    }
 
     onCreate (options) {
-        console.log("StateHandlerRoom created!", options);
+        console.log("Pong created!", options);
 
         this.setState(new State());
 
         this.onMessage("move", (client, data) => {
-            console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
-            this.state.movePlayer(client.sessionId, data);
+            console.log("Pong received message from", client.sessionId, ":", data);
+            this.state.moveBall(client.sessionId, data);
         });
     }
 
@@ -58,15 +102,15 @@ export class StateHandlerRoom extends Room<State> {
 
     onJoin (client: Client) {
         client.send("hello", "world");
-        this.state.createPlayer(client.sessionId);
+        this.state.createBall(client.sessionId);
     }
 
     onLeave (client) {
-        this.state.removePlayer(client.sessionId);
+        this.state.removeBall(client.sessionId);
     }
 
     onDispose () {
-        console.log("Dispose StateHandlerRoom");
+        console.log("Dispose Pong Room");
     }
 
 }

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+        body {
+            font-family: Tahoma, Geneva, sans-serif;
+        }
+    </style>
+
+    <!-- colyseus.js client -->
+    <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
+
+    <style type="text/css">
+        .player, .ball {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            padding-top: 24px;
+            box-sizing: border-box;
+            left: 0;
+            top: 0;
+        }
+
+        .ball {
+            border-radius: 50%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>
+        <a href="https://github.com/colyseus/colyseus-examples"><img
+                src="https://cdn.jsdelivr.net/gh/colyseus/colyseus@master/media/header.png" height="100"
+                alt="colyseus" /></a>
+    </h1>
+
+    <h1>PONG ROOM</h1>
+    
+    <body>
+    </body>
+
+
+    <script>
+        var host = window.document.location.host.replace(/:.*/, '');
+
+        var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
+        var room;
+
+        var context;
+
+        // function initBall(x, y) {
+        //     context = ballCanvas.getContext('2d');
+        //     context.beginPath();
+        //     context.fillStyle = "#0000ff";
+        //     // Draws a circle of radius 20 at the coordinates 100,100 on the canvas
+        //     context.arc(100, 100, 20, 0, Math.PI * 2, true); context.closePath();
+        //     context.fill();
+        // }
+
+        client.joinOrCreate("Pong").then(room_instance => {
+            room = room_instance
+
+            var balls = {};
+            var colors = ['red', 'green', 'yellow', 'blue', 'cyan', 'magenta'];
+
+            // listen to patches coming from the server
+            room.state.balls.onAdd = function (ball, sessionId) {
+                var dom = document.createElement("div");
+                dom.className = "ball";
+                dom.style.left = ball.x + "px";
+                dom.style.top = ball.y + "px";
+                dom.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                ball.onChange = function (changes) {
+                    dom.style.left = ball.x + "px";
+                    dom.style.top = ball.y + "px";
+                }
+
+                balls[sessionId] = dom;
+                document.body.appendChild(dom);
+            }
+
+            room.state.balls.onRemove = function (ball, sessionId) {
+                document.body.removeChild(balls[sessionId]);
+                delete balls[sessionId];
+            }
+
+
+            room.onMessage("hello", (message) => {
+                console.log(message);
+            });
+
+            window.addEventListener("keydown", function (e) {
+                if (e.which === 38) {
+                    up();
+
+                } else if (e.which === 39) {
+                    right();
+
+                } else if (e.which === 40) {
+                    down();
+
+                } else if (e.which === 37) {
+                    left();
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>
